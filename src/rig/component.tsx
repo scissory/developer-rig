@@ -7,17 +7,16 @@ import { ExtensionViewDialog } from '../extension-view-dialog';
 import { RigConfigurationsDialog } from '../rig-configurations-dialog';
 import { EditViewDialog, EditViewProps } from '../edit-view-dialog';
 import { ProductManagementViewContainer } from '../product-management-container';
+import { missingConfigurations } from '../util/errors';
 import { createExtensionObject } from '../util/extension';
 import { createSignedToken } from '../util/token';
-import { fetchManifest, fetchExtensionManifest, fetchUserInfo } from '../util/api';
+import { fetchExtensionManifest, fetchUserByName, fetchUserInfo } from '../util/api';
 import { ExtensionViews, ProductManagement } from '../constants/nav-items'
-import { ViewerTypes } from '../constants/viewer-types';
 import { OverlaySizes } from '../constants/overlay-sizes';
 import { IdentityOptions } from '../constants/identity-options';
 import { MobileSizes } from '../constants/mobile';
 import { RigRole } from '../constants/rig';
 import { RigExtensionView, RigExtension } from '../core/models/rig';
-import { Extension } from '../core/models/extension';
 import { ExtensionManifest } from '../core/models/manifest';
 import { UserSession } from '../core/models/user-session';
 import { SignInDialog } from '../sign-in-dialog';
@@ -299,16 +298,22 @@ export class RigComponent extends React.Component<Props, State> {
 
   private fetchInitialConfiguration() {
     if (this.state.userName) {
-      fetchManifest(
-        this.state.apiHost,
-        this.state.clientId,
-        this.state.userName,
-        this.state.version,
-        this.state.channelId,
-        this.state.secret
-      )
-      .then(this.onConfigurationSuccess)
-      .catch(this.onConfigurationError);
+      if (this.state.clientId && this.state.version && this.state.channelId && this.state.secret) {
+        fetchUserByName(this.state.apiHost, this.state.clientId, this.state.userName).then((user) => {
+          const userId = user['id'];
+          const token = createSignedToken(RigRole, '', userId, this.state.channelId, this.state.secret);
+          return fetchExtensionManifest(this.state.apiHost, this.state.clientId, this.state.version, token);
+        })
+        .then(this.onConfigurationSuccess)
+        .catch(this.onConfigurationError);
+      } else {
+        this.onConfigurationError(missingConfigurations({
+          'EXT_CLIENT_ID': this.state.clientId,
+          'EXT_VERSION': this.state.version,
+          'EXT_CHANNEL': this.state.channelId,
+          'EXT_SECRET': this.state.secret,
+        }));
+      }
     }
   }
 
