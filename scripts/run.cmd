@@ -45,8 +45,8 @@ REM Provide defaults in case of no arguments.
 SET PARENT=%~dp0..\..
 IF "%MANIFEST_FILE%" == "" IF "%FRONTEND_DIRECTORY%" == "" IF "%BACKEND_FILE%" == "" (
 	SET MANIFEST_FILE=%PARENT%\panel.json
-	SET FRONTEND_DIRECTORY=%PARENT%\my-extension
-	SET BACKEND_FILE=%PARENT%\my-extension\services\backend.js
+	SET FRONTEND_DIRECTORY=%PARENT%\pickme-extension
+	SET BACKEND_FILE=%PARENT%\pickme-extension\services\backend.js
 )
 CD /D "%~dp0.."
 
@@ -107,7 +107,6 @@ IF EXIST "%~2" (
 	ECHO Cannot open %~3 "%~2".
 	"%~dp0false" 2> NUL
 )
-EXIT /B
 
 REM If the configure script installed the prerequisites, these are their paths.
 :path_and_check
